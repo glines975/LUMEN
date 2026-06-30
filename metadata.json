@@ -1,0 +1,6 @@
+{
+  "name": "Cinematic Parallax Portfolio",
+  "description": "A highly polished 2.5D cinematic parallax personal portfolio website featuring Home, About, Works, and Contact sections in an immersive vertical scroll-driven layout with custom layered depth.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
