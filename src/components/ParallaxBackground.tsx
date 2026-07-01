@@ -8,6 +8,7 @@ interface ParallaxBackgroundProps {
   depthMapImage?: string;
   midgroundImage?: string;
   foregroundImage?: string;
+  isParchmentOpen?: boolean;
 }
 
 export default function ParallaxBackground({ 
@@ -16,7 +17,8 @@ export default function ParallaxBackground({
   backgroundImage = 'background.jpg',
   depthMapImage = 'depth.jpg',
   midgroundImage = 'midground.png',
-  foregroundImage = 'foreground.png'
+  foregroundImage = 'foreground.png',
+  isParchmentOpen = false
 }: ParallaxBackgroundProps) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [scrollY, setScrollY] = useState(0);
@@ -28,7 +30,7 @@ export default function ParallaxBackground({
 
   // Smoothly lerp anchorScrollY to the currently active page's target offset
   useEffect(() => {
-    const pageIndex = ['home', 'about', 'works', 'contact'].indexOf(currentPage);
+    const pageIndex = ['home', 'works', 'about', 'contact'].indexOf(currentPage);
     const targetAnchor = pageIndex * (window.innerHeight || 1000);
     
     let frameId: number;
@@ -131,29 +133,34 @@ export default function ParallaxBackground({
   const relativeScrollY = scrollY - anchorScrollY;
   const relativeScrollProgress = relativeScrollY / Math.max(window.innerHeight || 1000, 1);
 
+  const effectiveMouseX = isParchmentOpen ? 0 : mousePos.x;
+  const effectiveMouseY = isParchmentOpen ? 0 : mousePos.y;
+  const effectiveScrollY = isParchmentOpen ? 0 : relativeScrollY;
+  const effectiveScrollProgress = isParchmentOpen ? 0 : relativeScrollProgress;
+
   // Classic mode styles - unified transition durations and optimized multipliers to keep layers perfectly cohesive
   const bgStyle: React.CSSProperties = {
-    transform: `translate3d(${mousePos.x * -30}px, ${mousePos.y * -30 + relativeScrollY * 0.02}px, 0) scale(1.08)`,
+    transform: `translate3d(${effectiveMouseX * -30}px, ${effectiveMouseY * -30 + effectiveScrollY * 0.02}px, 0) scale(1.08)`,
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
   };
 
   const midStyle: React.CSSProperties = {
-    transform: `translate3d(${mousePos.x * -60}px, ${mousePos.y * -60 + relativeScrollY * 0.05}px, 0) scale(1.12)`,
+    transform: `translate3d(${effectiveMouseX * -60}px, ${effectiveMouseY * -60 + effectiveScrollY * 0.05}px, 0) scale(1.12)`,
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
   };
 
   const fgStyle: React.CSSProperties = {
-    transform: `translate3d(${mousePos.x * -90}px, ${mousePos.y * -90 + relativeScrollY * 0.08}px, 0) scale(1.15)`,
+    transform: `translate3d(${effectiveMouseX * -90}px, ${effectiveMouseY * -90 + effectiveScrollY * 0.08}px, 0) scale(1.15)`,
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
   };
 
   const orb1Style: React.CSSProperties = {
-    transform: `translate3d(${mousePos.x * 50}px, ${mousePos.y * 50 + relativeScrollY * -0.08}px, 0)`,
+    transform: `translate3d(${effectiveMouseX * 50}px, ${effectiveMouseY * 50 + effectiveScrollY * -0.08}px, 0)`,
     transition: 'transform 0.35s cubic-bezier(0.1, 0.8, 0.3, 1)',
   };
 
   const orb2Style: React.CSSProperties = {
-    transform: `translate3d(${mousePos.x * -60}px, ${mousePos.y * -60 + relativeScrollY * -0.15}px, 0)`,
+    transform: `translate3d(${effectiveMouseX * -60}px, ${effectiveMouseY * -60 + effectiveScrollY * -0.15}px, 0)`,
     transition: 'transform 0.45s cubic-bezier(0.1, 0.8, 0.3, 1)',
   };
 
@@ -173,9 +180,9 @@ export default function ParallaxBackground({
           <WebGLDepthMap
             image={activeBg}
             depthMap={activeDepth}
-            offsetX={mousePos.x}
-            offsetY={mousePos.y}
-            scrollProgress={relativeScrollProgress}
+            offsetX={effectiveMouseX}
+            offsetY={effectiveMouseY}
+            scrollProgress={effectiveScrollProgress}
             onLoadStatusChange={(success) => {
               if (!success) {
                 setWebglActive(false); // Fallback to procedural or layered on error

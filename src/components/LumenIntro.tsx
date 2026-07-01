@@ -5,7 +5,7 @@ const COLS = 12;
 const ROWS = 8;
 const TOTAL_CELLS = COLS * ROWS;
 
-export default function LumenIntro() {
+export default function LumenIntro({ onComplete }: { onComplete?: () => void }) {
   const [isVisible, setIsVisible] = useState(true);
   const [showLetters, setShowLetters] = useState(false);
   const [startDissipate, setStartDissipate] = useState(false);
@@ -59,6 +59,7 @@ export default function LumenIntro() {
     const endTimer = setTimeout(() => {
       setIsVisible(false);
       document.body.style.overflow = '';
+      if (onComplete) onComplete();
     }, 9800);
 
     return () => {
@@ -68,11 +69,12 @@ export default function LumenIntro() {
       clearTimeout(dissipateTimer);
       clearTimeout(endTimer);
     };
-  }, []);
+  }, [onComplete]);
 
   const handleSkip = () => {
     setIsVisible(false);
     document.body.style.overflow = '';
+    if (onComplete) onComplete();
   };
 
   if (!isVisible) return null;
