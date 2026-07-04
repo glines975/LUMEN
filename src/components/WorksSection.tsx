@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Edit, Trash2, Plus, Save, Upload, Image as ImageIcon } from 'lucide-react';
 
 interface WorksSectionProps {
   currentPage?: string;
@@ -13,6 +13,42 @@ interface PortfolioItem {
   desc: string;
   spec: string;
   img: string;
+  location?: string;
+  year?: string;
+  materials?: string;
+  dimensions?: string;
+  paragraphs?: string[];
+  specs?: { label: string; value: string }[];
+}
+
+function PortfolioImage({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (imgRef.current && imgRef.current.complete) {
+      setLoaded(true);
+    }
+  }, [src]);
+
+  return (
+    <div className="w-full h-full relative bg-[#e2e1db] flex items-center justify-center overflow-hidden">
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#e2e1db]/40 z-10">
+          <div className="w-5 h-5 border-[1.5px] border-[#475569]/20 border-t-[#475569] rounded-full animate-spin" />
+        </div>
+      )}
+      <img 
+        ref={imgRef}
+        src={src} 
+        alt={alt} 
+        referrerPolicy="no-referrer"
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+        className={`${className} transition-opacity duration-300 opacity-100`}
+      />
+    </div>
+  );
 }
 
 interface ParchmentData {
@@ -36,7 +72,7 @@ const PARCHMENTS: ParchmentData[] = [
         title: 'THE CLIFF CHURCH',
         desc: "Anchored within Bonifacio's eroded cliffs, architectural corridors interconnect three native reefs to frame a newly unified scenic vision.",
         spec: 'GRID-SYS // 01-C  •  SCALE // 1:1200  •  ELEVATION // SEA-LEVEL',
-        img: 'https://images.unsplash.com/photo-1566228015668-4c45dbc4e2f5?q=80&w=800&auto=format&fit=crop'
+        img: 'https://images.unsplash.com/photo-1548574505-5e239809ee19?q=80&w=1200&auto=format&fit=crop'
       },
       {
         title: 'LUMEN SANCTUARY',
@@ -117,7 +153,18 @@ interface ProjectDetail {
   specs: { label: string; value: string }[];
 }
 
-function getProjectDetails(title: string): ProjectDetail {
+function getProjectDetails(item: PortfolioItem): ProjectDetail {
+  if (item.location || item.year || item.materials || item.dimensions || item.paragraphs || item.specs) {
+    return {
+      location: item.location || "Sectors of the Inner Ring",
+      year: item.year || "LC 2046",
+      materials: item.materials || "Titanium Alloy, Smart Glass",
+      dimensions: item.dimensions || "Varies dynamically",
+      paragraphs: item.paragraphs || [item.desc],
+      specs: item.specs || [{ label: "INFO", value: item.spec }]
+    };
+  }
+
   const defaults: ProjectDetail = {
     location: "Sectors of the Inner Ring",
     year: "LC 2046",
@@ -135,7 +182,7 @@ function getProjectDetails(title: string): ProjectDetail {
     ]
   };
 
-  switch (title) {
+  switch (item.title) {
     case 'THE CLIFF CHURCH':
       return {
         location: "Karst Cliffs, Bonifacio, Corsica",
@@ -310,6 +357,46 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
   const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
 
+  const [parchments, setParchments] = useState<ParchmentData[]>(() => {
+    const saved = localStorage.getItem('LumenPortfolioParchments');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return PARCHMENTS;
+      }
+    }
+    return PARCHMENTS;
+  });
+
+  const saveParchments = (newData: ParchmentData[]) => {
+    setParchments(newData);
+    localStorage.setItem('LumenPortfolioParchments', JSON.stringify(newData));
+  };
+
+  const [isManagerOpen, setIsManagerOpen] = useState(false);
+  const [managerActiveTab, setManagerActiveTab] = useState<'arch' | 'visual' | 'ai'>('arch');
+  const [editingItemIdx, setEditingItemIdx] = useState<number | null>(null);
+  const [isAddingNew, setIsAddingNew] = useState(false);
+
+  // Item edit form states
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editSpec, setEditSpec] = useState('');
+  const [editImg, setEditImg] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [editYear, setEditYear] = useState('');
+  const [editMaterials, setEditMaterials] = useState('');
+  const [editDimensions, setEditDimensions] = useState('');
+  const [editParagraphs, setEditParagraphs] = useState<string[]>([]);
+  const [editSpecs, setEditSpecs] = useState<{ label: string; value: string }[]>([]);
+
+  // Category edit states
+  const [editCatTitle, setEditCatTitle] = useState('');
+  const [editCatSubtitle, setEditCatSubtitle] = useState('');
+  const [editCatLetter, setEditCatLetter] = useState('');
+  const [editCatSignature, setEditCatSignature] = useState('');
+
   useEffect(() => {
     onParchmentOpenChange?.(activeId !== 'none');
   }, [activeId, onParchmentOpenChange]);
@@ -366,7 +453,7 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
 
 
       <div className="w-full h-full max-w-7xl mx-auto flex items-center justify-center relative px-4 md:px-12">
-        {PARCHMENTS.map((parchment, idx) => {
+        {parchments.map((parchment, idx) => {
           const isSelected = activeId === parchment.id;
           const isLeftNeighbor = activeNeighbors?.left === parchment.id;
           const isRightNeighbor = activeNeighbors?.right === parchment.id;
@@ -467,7 +554,7 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
               onClick={() => handleCardClick(parchment.id)}
               className={`absolute flex items-center justify-center transition-opacity ${
                 isSelected 
-                  ? 'w-[96vw] max-w-7xl h-[70vh] md:h-[72vh] top-[14vh]' 
+                  ? 'w-[96vw] max-w-7xl h-[82vh] md:h-[83vh] top-[14vh]' 
                   : 'w-[280px] sm:w-[320px] h-[380px] sm:h-[440px] top-[22%] cursor-pointer'
               }`}
             >
@@ -505,7 +592,7 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
               
               {/* THE WHITE PAPER CONTAINER */}
               <div 
-                className="w-full h-full relative overflow-hidden flex flex-col justify-between p-4 z-10"
+                className={`w-full h-full relative overflow-hidden flex flex-col justify-between ${isSelected ? 'p-0' : 'p-4'} z-10`}
                 style={{
                   backgroundColor: '#ffffff',
                   borderRadius: '8px',
@@ -569,27 +656,47 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
                       {/* Underlay / Background Content of Level 2 - Gets greyed out when Level 3 is open */}
                       <div className={`w-full h-full flex flex-col transition-all duration-500 ${selectedItem ? 'filter grayscale opacity-30 brightness-[0.6] contrast-[0.8] blur-[1px] pointer-events-none' : ''}`}>
                         {/* Close button inside active card */}
-                        <div className="absolute top-4 right-4 z-[100] flex items-center gap-2">
-                          <button
-                            onClick={handleClose}
-                            className="p-2 text-[#475569]/70 hover:text-[#0f172a] hover:bg-slate-100 rounded-full transition-all duration-300 pointer-on shadow-sm border border-slate-200/50 bg-white"
-                            title="Close blueprint"
-                          >
-                            <X className="w-6 h-6" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={handleClose}
+                          className="absolute top-2 right-2 md:top-3 md:right-3 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 active:scale-90 z-[130] bg-transparent"
+                          title="Close blueprint"
+                        >
+                          <X className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.2} />
+                        </button>
 
                         {/* Top Header: Title & Subtitle system spanning full width */}
-                        <div className="w-full border-b border-[#475569]/15 pb-3 mb-4 z-10 pr-12">
-                          <span className="text-[8px] md:text-[9px] tracking-[0.4em] font-mono text-[#475569]/60 block uppercase mb-1">
-                            LUMEN BLUEPRINTS // L-00{idx + 1}
-                          </span>
-                          <h2 className="text-2xl md:text-3xl font-bold font-serif tracking-wider text-[#0f172a] mb-1">
-                            {parchment.title}
-                          </h2>
-                          <p className="text-[10px] md:text-xs tracking-[0.25em] text-[#475569]/80 font-mono uppercase font-semibold">
-                            {parchment.subtitle}
-                          </p>
+                        <div className="w-full border-b border-[#475569]/15 pb-3 mb-4 z-10 pr-12 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+                          <div>
+                            <span className="text-[8px] md:text-[9px] tracking-[0.4em] font-mono text-[#475569]/60 block uppercase mb-1">
+                              LUMEN BLUEPRINTS // L-00{idx + 1}
+                            </span>
+                            <h2 className="text-2xl md:text-3xl font-bold font-serif tracking-wider text-[#0f172a] mb-1">
+                              {parchment.title}
+                            </h2>
+                            <p className="text-[10px] md:text-xs tracking-[0.25em] text-[#475569]/80 font-mono uppercase font-semibold">
+                              {parchment.subtitle}
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setManagerActiveTab(parchment.id);
+                              // Sync category text fields
+                              setEditCatTitle(parchment.title);
+                              setEditCatSubtitle(parchment.subtitle);
+                              setEditCatLetter(parchment.letterIntro);
+                              setEditCatSignature(parchment.signature);
+                              
+                              setEditingItemIdx(null);
+                              setIsAddingNew(false);
+                              setIsManagerOpen(true);
+                            }}
+                            className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-800 text-[10px] font-mono font-bold tracking-wider rounded border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer hover:shadow-sm"
+                          >
+                            <Edit className="w-3 h-3 text-blue-600" />
+                            <span>管理作品集</span>
+                          </button>
                         </div>
 
                         {/* Bottom Section: Full Width Horizontal Portfolio */}
@@ -611,12 +718,11 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
                                 className="w-[280px] md:w-[320px] shrink-0 h-[96%] flex flex-col justify-between p-4 border border-[#475569]/12 bg-white/70 backdrop-blur-sm rounded-[4px] shadow-sm animate-fade-in cursor-pointer hover:border-[#475569]/35 hover:shadow-md hover:bg-white/95 transition-all duration-300 active:scale-[0.98]"
                               >
                                 {/* Photo / Sketch Frame with Double borders */}
-                                <div className={`relative w-full ${item.title === 'THE CLIFF CHURCH' ? 'aspect-square' : 'aspect-[4/3]'} overflow-hidden rounded-[2px] border border-[#475569]/20 p-[3px] bg-gradient-to-b from-slate-100 to-slate-200 shadow-[0_4px_10px_rgba(0,0,0,0.06)] group/img`}>
+                                <div className="relative w-full aspect-[4/3] overflow-hidden rounded-[2px] border border-[#475569]/20 p-[3px] bg-gradient-to-b from-slate-100 to-slate-200 shadow-[0_4px_10px_rgba(0,0,0,0.06)] group/img">
                                   <div className="w-full h-full overflow-hidden relative">
-                                    <img 
+                                    <PortfolioImage 
                                       src={item.img} 
                                       alt={item.title} 
-                                      referrerPolicy="no-referrer"
                                       className="w-full h-full object-cover contrast-[1.03] group-hover/img:scale-105 transition-transform duration-700 ease-out"
                                     />
                                   </div>
@@ -635,12 +741,13 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
                             ))}
                           </div>
 
-                          {/* Navigation helper hints at bottom of horizontal scroll */}
-                          <div className="absolute bottom-1 right-2 pointer-events-none flex items-center space-x-1 opacity-60">
-                            <ChevronLeft className="w-3 h-3 text-[#475569]" />
-                            <span className="text-[8px] font-mono text-[#475569]">SCROLL WHEEL OR DRAG</span>
-                            <ChevronRight className="w-3 h-3 text-[#475569]" />
-                          </div>
+                        </div>
+
+                        {/* Navigation helper hints at bottom of horizontal scroll */}
+                        <div className="absolute bottom-1 md:bottom-1.5 right-6 md:right-8 pointer-events-none flex items-center space-x-1 opacity-60 z-20">
+                          <ChevronLeft className="w-3 h-3 text-[#475569]" />
+                          <span className="text-[8px] font-mono text-[#475569]">SCROLL WHEEL OR DRAG</span>
+                          <ChevronRight className="w-3 h-3 text-[#475569]" />
                         </div>
                       </div>
 
@@ -652,11 +759,20 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 50 }}
                             transition={{ type: 'spring', damping: 28, stiffness: 150 }}
-                            className="absolute inset-0 z-[110] bg-[#fbfbf9]/98 overflow-y-auto scrollbar-none flex flex-col"
+                            className="absolute inset-0 z-[110] bg-[#fbfbf9]/98 flex flex-col overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            {/* Sticky Header Row / Close controller */}
-                            <div className="sticky top-0 right-0 left-0 flex justify-between items-center px-6 py-4 border-b border-[#475569]/10 bg-[#fbfbf9]/90 backdrop-blur-md z-[120]">
+                            {/* Close button in absolute corner of the overlay - matches secondary perfectly */}
+                            <button
+                              onClick={handleCloseItem}
+                              className="absolute top-2 right-2 md:top-3 md:right-3 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 active:scale-90 z-[130] bg-transparent"
+                              title="Close project detail"
+                            >
+                              <X className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.2} />
+                            </button>
+
+                            {/* Header Row */}
+                            <div className="w-full flex justify-between items-center px-6 py-4 border-b border-[#475569]/10 bg-[#fbfbf9]/95 backdrop-blur-md z-[120] pr-12 md:pr-16">
                               <div className="flex flex-col">
                                 <span className="text-[8px] font-mono text-[#475569]/60 tracking-[0.3em] uppercase">
                                   LUMEN CITY ARCHIVES // PROJECT EXPLAINED
@@ -665,28 +781,21 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
                                   {selectedItem.title}
                                 </span>
                               </div>
-                              <button
-                                onClick={handleCloseItem}
-                                className="p-2 text-[#475569]/70 hover:text-[#0f172a] hover:bg-slate-200/50 rounded-full transition-all duration-300 pointer-on shadow-sm border border-slate-200/50 bg-white"
-                                title="Close project detail"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
                             </div>
 
-                            {/* Vertical Scroll Body */}
-                            <div className="w-full max-w-4xl mx-auto px-6 py-8 md:py-12 flex flex-col space-y-8 select-text">
-                              {/* Large Hero Image Layout with double border frames */}
-                              <div className={`relative w-full ${selectedItem.title === 'THE CLIFF CHURCH' ? 'aspect-square max-w-[450px] mx-auto' : 'aspect-video md:aspect-[21/9]'} overflow-hidden rounded-[4px] border border-[#475569]/15 p-1 bg-[#f0eee9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]`}>
-                                <div className="w-full h-full overflow-hidden rounded-[2px] relative">
-                                  <img 
-                                    src={selectedItem.img} 
-                                    alt={selectedItem.title}
-                                    referrerPolicy="no-referrer"
-                                    className="w-full h-full object-cover contrast-[1.03]"
-                                  />
+                            {/* Scrollable Container */}
+                            <div className="flex-1 overflow-y-auto scrollbar-none">
+                              <div className="w-full max-w-4xl mx-auto px-6 py-8 md:py-12 flex flex-col space-y-8 select-text">
+                                {/* Large Hero Image Layout with double border frames */}
+                                <div className="relative w-full aspect-video md:aspect-[21/9] overflow-hidden rounded-[4px] border border-[#475569]/15 p-1 bg-[#f0eee9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+                                  <div className="w-full h-full overflow-hidden rounded-[2px] relative">
+                                    <PortfolioImage 
+                                      src={selectedItem.img} 
+                                      alt={selectedItem.title}
+                                      className="w-full h-full object-cover contrast-[1.03]"
+                                    />
+                                  </div>
                                 </div>
-                              </div>
 
                               {/* Title block with editorial details */}
                               <div className="border-b border-[#475569]/10 pb-6">
@@ -705,7 +814,7 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
                                     LOCATION
                                   </span>
                                   <span className="block text-xs font-serif text-[#0f172a] font-semibold mt-1">
-                                    {getProjectDetails(selectedItem.title).location}
+                                    {getProjectDetails(selectedItem).location}
                                   </span>
                                 </div>
                                 <div>
@@ -713,7 +822,7 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
                                     TIMELINE
                                   </span>
                                   <span className="block text-xs font-serif text-[#0f172a] font-semibold mt-1">
-                                    {getProjectDetails(selectedItem.title).year}
+                                    {getProjectDetails(selectedItem).year}
                                   </span>
                                 </div>
                                 <div>
@@ -721,15 +830,15 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
                                     DIMENSIONS
                                   </span>
                                   <span className="block text-xs font-serif text-[#0f172a] font-semibold mt-1">
-                                    {getProjectDetails(selectedItem.title).dimensions}
+                                    {getProjectDetails(selectedItem).dimensions}
                                   </span>
                                 </div>
                                 <div>
                                   <span className="block text-[8px] font-mono text-[#475569]/60 tracking-wider uppercase">
                                     PRIMARY MATERIAL
                                   </span>
-                                  <span className="block text-xs font-serif text-[#0f172a] font-semibold mt-1 truncate" title={getProjectDetails(selectedItem.title).materials}>
-                                    {getProjectDetails(selectedItem.title).materials.split(',')[0]}
+                                  <span className="block text-xs font-serif text-[#0f172a] font-semibold mt-1 truncate" title={getProjectDetails(selectedItem).materials}>
+                                    {getProjectDetails(selectedItem).materials.split(',')[0]}
                                   </span>
                                 </div>
                               </div>
@@ -741,7 +850,7 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
                                   <h3 className="text-[10px] font-mono tracking-widest text-[#475569]/70 uppercase font-bold border-b border-[#475569]/10 pb-1">
                                     DESIGN PHILOSOPHY & INCEPTION
                                   </h3>
-                                  {getProjectDetails(selectedItem.title).paragraphs.map((p, pIdx) => (
+                                  {getProjectDetails(selectedItem).paragraphs.map((p, pIdx) => (
                                     <p key={pIdx} className="text-xs md:text-sm font-serif text-[#1e293b]/90 leading-relaxed text-justify">
                                       {p}
                                     </p>
@@ -754,7 +863,7 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
                                     TECHNICAL SPECIFICATION
                                   </h3>
                                   <div className="space-y-3">
-                                    {getProjectDetails(selectedItem.title).specs.map((spec, specIdx) => (
+                                    {getProjectDetails(selectedItem).specs.map((spec, specIdx) => (
                                       <div key={specIdx} className="border-b border-[#475569]/10 pb-2 last:border-0 last:pb-0">
                                         <span className="block text-[7px] font-mono text-[#475569]/50 tracking-wider uppercase">
                                           {spec.label}
@@ -793,7 +902,8 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
                                 </div>
                               </div>
                             </div>
-                          </motion.div>
+                          </div>
+                        </motion.div>
                         )}
                       </AnimatePresence>
                     </motion.div>
@@ -804,6 +914,529 @@ export default function WorksSection({ currentPage, introCompleted, onParchmentO
           );
         })}
       </div>
+
+      {/* Portfolio Manager Modal overlay */}
+      <AnimatePresence>
+        {isManagerOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md select-text"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 180 }}
+              className="w-full max-w-4xl h-[85vh] bg-[#0c0c14] border border-white/10 rounded-2xl flex flex-col overflow-hidden text-white"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-5 border-b border-white/5 bg-[#10101a] flex-shrink-0">
+                <div className="flex items-center space-x-2.5">
+                  <Edit className="w-4 h-4 text-blue-400 animate-pulse" />
+                  <div className="text-left">
+                    <h3 className="text-xs md:text-sm font-sans tracking-widest text-white uppercase font-bold">
+                      作品集管理系统 // PORTFOLIO ARCHIVE WORKSTATION
+                    </h3>
+                    <p className="text-[10px] text-white/40 font-mono tracking-wider mt-0.5">
+                      CUSTOMIZE TITLES, INTROS, DESCRIPTIONS, IMAGES & DETAILED BLUEPRINTS
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsManagerOpen(false)}
+                  className="p-1.5 text-white/40 hover:text-white hover:bg-white/5 rounded-full transition-all duration-300 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Category selector tabs */}
+              <div className="bg-[#12121c]/90 px-6 py-3 border-b border-white/5 flex gap-2 flex-shrink-0">
+                {parchments.map((p) => {
+                  const isActive = managerActiveTab === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setManagerActiveTab(p.id);
+                        // Sync category text fields
+                        setEditCatTitle(p.title);
+                        setEditCatSubtitle(p.subtitle);
+                        setEditCatLetter(p.letterIntro);
+                        setEditCatSignature(p.signature);
+                        
+                        setEditingItemIdx(null);
+                        setIsAddingNew(false);
+                      }}
+                      className={`py-2 px-4 rounded-lg text-xs font-bold font-sans tracking-wider transition-all duration-300 relative border cursor-pointer ${
+                        isActive
+                          ? 'border-blue-500/40 bg-blue-500/10 text-white'
+                          : 'border-transparent text-white/50 hover:text-white/80 hover:bg-white/[0.02]'
+                      }`}
+                    >
+                      {p.title}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Main Panel split layout: Left is list / category edit, Right is item edit form */}
+              <div className="flex-1 flex overflow-hidden min-h-0 bg-[#08080f]">
+                {/* Left side: Category parameters and Item List */}
+                <div className="w-1/2 border-r border-white/5 p-6 overflow-y-auto space-y-6">
+                  {/* Category settings form */}
+                  <div className="space-y-4 bg-white/[0.02] border border-white/5 p-4 rounded-xl text-left">
+                    <h4 className="text-xs font-mono tracking-wider text-blue-400 uppercase font-bold flex items-center gap-1.5">
+                      <span>[01]</span> 编辑分类头信息
+                    </h4>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[9px] font-mono text-white/40 uppercase tracking-widest mb-1">分类标题 (Title)</label>
+                        <input
+                          type="text"
+                          value={editCatTitle}
+                          onChange={(e) => {
+                            setEditCatTitle(e.target.value);
+                            const updated = parchments.map(p => p.id === managerActiveTab ? { ...p, title: e.target.value } : p);
+                            saveParchments(updated);
+                          }}
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-blue-400/50 font-sans"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-mono text-white/40 uppercase tracking-widest mb-1">分类副标题 (Subtitle)</label>
+                        <input
+                          type="text"
+                          value={editCatSubtitle}
+                          onChange={(e) => {
+                            setEditCatSubtitle(e.target.value);
+                            const updated = parchments.map(p => p.id === managerActiveTab ? { ...p, subtitle: e.target.value } : p);
+                            saveParchments(updated);
+                          }}
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-blue-400/50 font-mono text-blue-300"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-mono text-white/40 uppercase tracking-widest mb-1">自白信导言 (Intro Letter)</label>
+                        <textarea
+                          rows={3}
+                          value={editCatLetter}
+                          onChange={(e) => {
+                            setEditCatLetter(e.target.value);
+                            const updated = parchments.map(p => p.id === managerActiveTab ? { ...p, letterIntro: e.target.value } : p);
+                            saveParchments(updated);
+                          }}
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-blue-400/50 font-sans leading-relaxed resize-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-mono text-white/40 uppercase tracking-widest mb-1">签名 (Signature)</label>
+                        <input
+                          type="text"
+                          value={editCatSignature}
+                          onChange={(e) => {
+                            setEditCatSignature(e.target.value);
+                            const updated = parchments.map(p => p.id === managerActiveTab ? { ...p, signature: e.target.value } : p);
+                            saveParchments(updated);
+                          }}
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-blue-400/50 font-serif italic text-slate-300"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Items list */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-mono tracking-wider text-blue-400 uppercase font-bold flex items-center gap-1.5">
+                        <span>[02]</span> 作品列表
+                      </h4>
+                      <button
+                        onClick={() => {
+                          setIsAddingNew(true);
+                          setEditingItemIdx(null);
+                          // Reset edit form states to empty/defaults
+                          setEditTitle('新作品 PROJECT TITLE');
+                          setEditDesc('这是一部关于几何与光的探索之作。');
+                          setEditSpec('SECTOR // NEW  •  SPEC // DYNAMIC');
+                          setEditImg('https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1200'); // default Santorini
+                          setEditLocation('Lumen Sectors');
+                          setEditYear('LC 2046');
+                          setEditMaterials('Light Matter, Crystal Glass');
+                          setEditDimensions('Variable scale');
+                          setEditParagraphs(['在这里写下对项目的详细设计理念。第一段。', '这是第二段。']);
+                          setEditSpecs([
+                            { label: 'TECHNICAL STABILITY', value: 'Quantum Stabilized' },
+                            { label: 'ENERGY FLOW', value: 'Photonic Array' }
+                          ]);
+                        }}
+                        className="px-2.5 py-1 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-mono font-bold tracking-wider rounded flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>新增作品</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 text-left">
+                      {parchments.find(p => p.id === managerActiveTab)?.items.map((item, itemIdx) => {
+                        const isCurrentlyEditingThis = editingItemIdx === itemIdx;
+                        return (
+                          <div
+                            key={itemIdx}
+                            onClick={() => {
+                              setIsAddingNew(false);
+                              setEditingItemIdx(itemIdx);
+                              // Sync edit form states
+                              setEditTitle(item.title);
+                              setEditDesc(item.desc);
+                              setEditSpec(item.spec);
+                              setEditImg(item.img);
+                              
+                              const details = getProjectDetails(item);
+                              setEditLocation(details.location);
+                              setEditYear(details.year);
+                              setEditMaterials(details.materials);
+                              setEditDimensions(details.dimensions);
+                              setEditParagraphs(details.paragraphs);
+                              setEditSpecs(details.specs);
+                            }}
+                            className={`p-3 border rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+                              isCurrentlyEditingThis 
+                                ? 'border-blue-500 bg-blue-500/5' 
+                                : 'border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/10'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3 min-w-0">
+                              <div className="w-12 h-9 rounded border border-white/10 overflow-hidden bg-black flex-shrink-0">
+                                <img src={item.img} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              </div>
+                              <div className="min-w-0">
+                                <h5 className="text-xs font-bold text-white truncate max-w-[150px]">{item.title}</h5>
+                                <p className="text-[9px] font-mono text-white/40 tracking-wider truncate max-w-[180px] mt-0.5">{item.spec}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={() => {
+                                  // Trigger select
+                                  setIsAddingNew(false);
+                                  setEditingItemIdx(itemIdx);
+                                  setEditTitle(item.title);
+                                  setEditDesc(item.desc);
+                                  setEditSpec(item.spec);
+                                  setEditImg(item.img);
+                                  const details = getProjectDetails(item);
+                                  setEditLocation(details.location);
+                                  setEditYear(details.year);
+                                  setEditMaterials(details.materials);
+                                  setEditDimensions(details.dimensions);
+                                  setEditParagraphs(details.paragraphs);
+                                  setEditSpecs(details.specs);
+                                }}
+                                className="p-1 hover:bg-blue-500/20 text-blue-400 hover:text-white rounded transition-colors"
+                                title="编辑作品"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  // Delete item
+                                  const activeCat = parchments.find(p => p.id === managerActiveTab);
+                                  if (activeCat) {
+                                    const updatedItems = activeCat.items.filter((_, idx) => idx !== itemIdx);
+                                    const updated = parchments.map(p => p.id === managerActiveTab ? { ...p, items: updatedItems } : p);
+                                    saveParchments(updated);
+                                    setEditingItemIdx(null);
+                                    setSelectedItem(null);
+                                  }
+                                }}
+                                className="p-1 hover:bg-rose-500/20 text-rose-400 hover:text-white rounded transition-colors"
+                                title="删除作品"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right side: Detailed edit form for the selected project */}
+                <div className="w-1/2 p-6 overflow-y-auto space-y-5 bg-[#0a0a12]/50">
+                  {(editingItemIdx !== null || isAddingNew) ? (
+                    <div className="space-y-4 text-left">
+                      <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                        <h4 className="text-xs font-mono tracking-wider text-emerald-400 uppercase font-bold flex items-center gap-1.5">
+                          <span>[FORM]</span> {isAddingNew ? '添加新作品详情' : '编辑作品详情'}
+                        </h4>
+                        <span className="text-[10px] font-mono text-white/30">{isAddingNew ? 'NEW_ITEM' : `ITEM_#${editingItemIdx! + 1}`}</span>
+                      </div>
+
+                      {/* Title */}
+                      <div className="space-y-1">
+                        <label className="block text-[9px] font-mono text-white/40 uppercase tracking-widest">作品名称 (Title)</label>
+                        <input
+                          type="text"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-blue-400/50 font-bold font-serif"
+                        />
+                      </div>
+
+                      {/* Brief description */}
+                      <div className="space-y-1">
+                        <label className="block text-[9px] font-mono text-white/40 uppercase tracking-widest">简短描述 (Brief Description)</label>
+                        <textarea
+                          rows={2}
+                          value={editDesc}
+                          onChange={(e) => setEditDesc(e.target.value)}
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-blue-400/50 font-sans resize-none"
+                        />
+                      </div>
+
+                      {/* Spec summary label */}
+                      <div className="space-y-1">
+                        <label className="block text-[9px] font-mono text-white/40 uppercase tracking-widest">卡片底部精简规格 (Card Spec Label)</label>
+                        <input
+                          type="text"
+                          value={editSpec}
+                          onChange={(e) => setEditSpec(e.target.value)}
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-blue-400/50 font-mono text-[10px]"
+                        />
+                      </div>
+
+                      {/* Image uploader / URL */}
+                      <div className="space-y-2 bg-white/[0.01] border border-white/5 p-3 rounded-lg">
+                        <label className="block text-[9px] font-mono text-white/40 uppercase tracking-widest">作品图片 (Project Image)</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={editImg}
+                            onChange={(e) => setEditImg(e.target.value)}
+                            placeholder="https://images.unsplash.com/... / project.jpg"
+                            className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/10 focus:outline-none focus:border-blue-400/50 font-mono"
+                          />
+                          <label className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-sans text-white/80 hover:text-white cursor-pointer pointer-on flex items-center gap-1.5 flex-shrink-0">
+                            <Upload className="w-3.5 h-3.5 text-blue-400" />
+                            <span>上传</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    const base64Data = ev.target?.result as string;
+                                    if (base64Data) setEditImg(base64Data);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                        {editImg && (
+                          <div className="h-16 w-full bg-black/30 border border-white/5 rounded-lg overflow-hidden flex items-center justify-between px-3 py-1.5">
+                            <div className="flex items-center space-x-2.5 h-full">
+                              <div className="w-20 h-full rounded border border-white/10 overflow-hidden bg-black flex-shrink-0">
+                                <img src={editImg} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              </div>
+                              <span className="text-[10px] font-mono text-white/40">PREVIEW READY</span>
+                            </div>
+                            <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">OK</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Editorial Project Metadata details */}
+                      <div className="border-t border-white/5 pt-3 space-y-3">
+                        <span className="block text-[10px] font-mono text-blue-400 uppercase tracking-widest font-semibold">// 详细蓝图元数据 / DETAILED METADATA</span>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[8px] font-mono text-white/40 uppercase tracking-wider mb-1">项目地点 (Location)</label>
+                            <input
+                              type="text"
+                              value={editLocation}
+                              onChange={(e) => setEditLocation(e.target.value)}
+                              className="w-full bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none font-sans"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[8px] font-mono text-white/40 uppercase tracking-wider mb-1">设计时间 (Timeline)</label>
+                            <input
+                              type="text"
+                              value={editYear}
+                              onChange={(e) => setEditYear(e.target.value)}
+                              className="w-full bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none font-sans"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[8px] font-mono text-white/40 uppercase tracking-wider mb-1">设计规格尺寸 (Dimensions)</label>
+                            <input
+                              type="text"
+                              value={editDimensions}
+                              onChange={(e) => setEditDimensions(e.target.value)}
+                              className="w-full bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none font-sans"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[8px] font-mono text-white/40 uppercase tracking-wider mb-1">主选材质 (Primary Material)</label>
+                            <input
+                              type="text"
+                              value={editMaterials}
+                              onChange={(e) => setEditMaterials(e.target.value)}
+                              className="w-full bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none font-sans"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Detailed narrative paragraphs */}
+                      <div className="space-y-1.5">
+                        <label className="block text-[9px] font-mono text-white/40 uppercase tracking-widest flex justify-between">
+                          <span>设计哲学长文段落 (Narrative Paragraphs)</span>
+                          <span className="text-[8px] opacity-60 font-mono font-normal">每一行一个段落</span>
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={editParagraphs.join('\n')}
+                          onChange={(e) => setEditParagraphs(e.target.value.split('\n'))}
+                          placeholder="第一段 design philosophy...&#10;第二段 technology analysis..."
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-blue-400/50 font-sans leading-relaxed resize-y"
+                        />
+                      </div>
+
+                      {/* Technical specifications specs key-values */}
+                      <div className="space-y-2">
+                        <label className="block text-[9px] font-mono text-white/40 uppercase tracking-widest">高级技术规格清单 (Technical Specs)</label>
+                        <div className="space-y-2">
+                          {editSpecs.map((spec, specIdx) => (
+                            <div key={specIdx} className="flex gap-2 items-center">
+                              <input
+                                type="text"
+                                value={spec.label}
+                                onChange={(e) => {
+                                  const updated = [...editSpecs];
+                                  updated[specIdx].label = e.target.value;
+                                  setEditSpecs(updated);
+                                }}
+                                placeholder="指标 (e.g. CAPACITY)"
+                                className="w-1/2 bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white font-mono uppercase"
+                              />
+                              <input
+                                type="text"
+                                value={spec.value}
+                                onChange={(e) => {
+                                  const updated = [...editSpecs];
+                                  updated[specIdx].value = e.target.value;
+                                  setEditSpecs(updated);
+                                }}
+                                placeholder="参数 (e.g. 120 Visitors)"
+                                className="w-1/2 bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white font-mono"
+                              />
+                              <button
+                                onClick={() => setEditSpecs(editSpecs.filter((_, idx) => idx !== specIdx))}
+                                className="text-rose-400 hover:text-white p-1 hover:bg-white/5 rounded"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => setEditSpecs([...editSpecs, { label: 'NEW SPEC', value: 'Value' }])}
+                            className="px-2 py-1 bg-white/5 hover:bg-white/10 text-white/80 text-[9px] font-mono rounded flex items-center gap-1 cursor-pointer w-fit"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>添加指标条目</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          onClick={() => {
+                            // Cancel edit
+                            setEditingItemIdx(null);
+                            setIsAddingNew(false);
+                          }}
+                          className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs font-bold rounded-lg transition-all"
+                        >
+                          取消
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Apply save
+                            const activeCat = parchments.find(p => p.id === managerActiveTab);
+                            if (activeCat) {
+                              const newItem: PortfolioItem = {
+                                title: editTitle,
+                                desc: editDesc,
+                                spec: editSpec,
+                                img: editImg,
+                                location: editLocation,
+                                year: editYear,
+                                materials: editMaterials,
+                                dimensions: editDimensions,
+                                paragraphs: editParagraphs.filter(p => p.trim() !== ''),
+                                specs: editSpecs.filter(s => s.label.trim() !== '')
+                              };
+
+                              let updatedItems = [...activeCat.items];
+                              if (isAddingNew) {
+                                updatedItems.push(newItem);
+                              } else if (editingItemIdx !== null) {
+                                updatedItems[editingItemIdx] = newItem;
+                              }
+
+                              const updated = parchments.map(p => p.id === managerActiveTab ? { ...p, items: updatedItems } : p);
+                              saveParchments(updated);
+                              
+                              // Reset state
+                              setEditingItemIdx(null);
+                              setIsAddingNew(false);
+                              setSelectedItem(null); // refresh detail page if open
+                            }
+                          }}
+                          className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+                        >
+                          <Save className="w-3.5 h-3.5" />
+                          <span>保存该作品项</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-center opacity-40 select-none p-6">
+                      <ImageIcon className="w-10 h-10 text-white/50 mb-3 animate-pulse" />
+                      <p className="text-xs font-sans">选择左侧作品或点击「新增作品」以展开表单配置</p>
+                      <p className="text-[10px] font-mono tracking-widest text-white/30 uppercase mt-1">NO PROJECT ACTIVE</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 border-t border-white/5 bg-[#10101a] flex justify-end flex-shrink-0">
+                <button
+                  onClick={() => setIsManagerOpen(false)}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(37,99,235,0.25)]"
+                >
+                  完成退出
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

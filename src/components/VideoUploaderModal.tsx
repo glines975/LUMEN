@@ -234,6 +234,25 @@ export default function VideoUploaderModal({
                       />
                     </label>
                   </div>
+                  {currentScene.backgroundImage && (
+                    <div className="mt-2 h-14 w-full bg-black/30 border border-white/5 rounded-lg flex items-center justify-between px-3 py-1.5 overflow-hidden animate-fade-in">
+                      <div className="flex items-center space-x-2.5 h-full">
+                        <div className="w-16 h-full rounded border border-white/10 overflow-hidden bg-black flex-shrink-0">
+                          <img src={currentScene.backgroundImage} alt="preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                        <div className="flex flex-col justify-center select-none">
+                          <span className="text-[10px] text-white/50 font-mono tracking-wider">PREVIEW // READY</span>
+                          <span className="text-[9px] text-white/30 font-mono overflow-hidden text-ellipsis max-w-[200px] whitespace-nowrap">
+                            {currentScene.backgroundImage.startsWith('data:') ? 'Base64 Local Image File' : currentScene.backgroundImage}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-emerald-400 font-bold font-mono tracking-widest flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded flex-shrink-0">
+                        <Check className="w-3 h-3" />
+                        <span>LOADED</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Image 2: Depth Map */}
@@ -263,6 +282,25 @@ export default function VideoUploaderModal({
                       />
                     </label>
                   </div>
+                  {currentScene.depthMapImage && (
+                    <div className="mt-2 h-14 w-full bg-black/30 border border-white/5 rounded-lg flex items-center justify-between px-3 py-1.5 overflow-hidden animate-fade-in">
+                      <div className="flex items-center space-x-2.5 h-full">
+                        <div className="w-16 h-full rounded border border-white/10 overflow-hidden bg-black flex-shrink-0">
+                          <img src={currentScene.depthMapImage} alt="preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                        <div className="flex flex-col justify-center select-none">
+                          <span className="text-[10px] text-white/50 font-mono tracking-wider">PREVIEW // READY</span>
+                          <span className="text-[9px] text-white/30 font-mono overflow-hidden text-ellipsis max-w-[200px] whitespace-nowrap">
+                            {currentScene.depthMapImage.startsWith('data:') ? 'Base64 Local Image File' : currentScene.depthMapImage}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-emerald-400 font-bold font-mono tracking-widest flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded flex-shrink-0">
+                        <Check className="w-3 h-3" />
+                        <span>LOADED</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -294,6 +332,25 @@ export default function VideoUploaderModal({
                       />
                     </label>
                   </div>
+                  {currentScene.backgroundImage && (
+                    <div className="mt-2 h-14 w-full bg-black/30 border border-white/5 rounded-lg flex items-center justify-between px-3 py-1.5 overflow-hidden animate-fade-in">
+                      <div className="flex items-center space-x-2.5 h-full">
+                        <div className="w-16 h-full rounded border border-white/10 overflow-hidden bg-black flex-shrink-0">
+                          <img src={currentScene.backgroundImage} alt="preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                        <div className="flex flex-col justify-center select-none">
+                          <span className="text-[10px] text-white/50 font-mono tracking-wider">PREVIEW // READY</span>
+                          <span className="text-[9px] text-white/30 font-mono overflow-hidden text-ellipsis max-w-[200px] whitespace-nowrap">
+                            {currentScene.backgroundImage.startsWith('data:') ? 'Base64 Local Image File' : currentScene.backgroundImage}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-emerald-400 font-bold font-mono tracking-widest flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded flex-shrink-0">
+                        <Check className="w-3 h-3" />
+                        <span>LOADED</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Layer 2: Midground */}
@@ -323,6 +380,25 @@ export default function VideoUploaderModal({
                       />
                     </label>
                   </div>
+                  {currentScene.midgroundImage && (
+                    <div className="mt-2 h-14 w-full bg-black/30 border border-white/5 rounded-lg flex items-center justify-between px-3 py-1.5 overflow-hidden animate-fade-in">
+                      <div className="flex items-center space-x-2.5 h-full">
+                        <div className="w-16 h-full rounded border border-white/10 overflow-hidden bg-black flex-shrink-0">
+                          <img src={currentScene.midgroundImage} alt="preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                        <div className="flex flex-col justify-center select-none">
+                          <span className="text-[10px] text-white/50 font-mono tracking-wider">PREVIEW // READY</span>
+                          <span className="text-[9px] text-white/30 font-mono overflow-hidden text-ellipsis max-w-[200px] whitespace-nowrap">
+                            {currentScene.midgroundImage.startsWith('data:') ? 'Base64 Local Image File' : currentScene.midgroundImage}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-emerald-400 font-bold font-mono tracking-widest flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded flex-shrink-0">
+                        <Check className="w-3 h-3" />
+                        <span>LOADED</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Layer 3: Foreground */}
@@ -352,6 +428,25 @@ export default function VideoUploaderModal({
                       />
                     </label>
                   </div>
+                  {currentScene.foregroundImage && (
+                    <div className="mt-2 h-14 w-full bg-black/30 border border-white/5 rounded-lg flex items-center justify-between px-3 py-1.5 overflow-hidden animate-fade-in">
+                      <div className="flex items-center space-x-2.5 h-full">
+                        <div className="w-16 h-full rounded border border-white/10 overflow-hidden bg-black flex-shrink-0">
+                          <img src={currentScene.foregroundImage} alt="preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                        <div className="flex flex-col justify-center select-none">
+                          <span className="text-[10px] text-white/50 font-mono tracking-wider">PREVIEW // READY</span>
+                          <span className="text-[9px] text-white/30 font-mono overflow-hidden text-ellipsis max-w-[200px] whitespace-nowrap">
+                            {currentScene.foregroundImage.startsWith('data:') ? 'Base64 Local Image File' : currentScene.foregroundImage}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-emerald-400 font-bold font-mono tracking-widest flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded flex-shrink-0">
+                        <Check className="w-3 h-3" />
+                        <span>LOADED</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             )}

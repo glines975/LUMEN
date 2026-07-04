@@ -12,7 +12,7 @@ export default function Navbar({ currentPage, onPageChange }: NavbarProps) {
   const navItems = [
     { id: 'home' as PageType, english: 'HOME' },
     { id: 'works' as PageType, english: 'PROJECT' },
-    { id: 'about' as PageType, english: 'ME' },
+    { id: 'about' as PageType, english: 'ABOUT' },
     { id: 'contact' as PageType, english: 'CONTACT' },
   ];
 
