@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Italiana&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-art: "Italiana", serif;
+}
+
+html {
+  scroll-behavior: auto;
+  background-color: #020204;
+  color: #ffffff;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Italiana custom font class mapping */
+.font-art {
+  font-family: 'Italiana', serif;
+}
+
+/* 1. LUMEN text letter reveal, scale, micro-rise, and dissipation */
+.intro-text-anim {
+  opacity: 0;
+  animation: textReveal 4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes textReveal {
+  0% {
+    opacity: 0;
+    letter-spacing: 0.1em;
+    filter: blur(15px);
+    transform: scale(0.9) translateY(20px);
+  }
+  35% {
+    opacity: 1;
+    letter-spacing: 0.35em;
+    filter: blur(0px);
+    transform: scale(1) translateY(0);
+  }
+  70% {
+    opacity: 1;
+    letter-spacing: 0.4em;
+    filter: blur(0px);
+    transform: scale(1.01) translateY(-2px);
+  }
+  100% {
+    opacity: 0;
+    letter-spacing: 0.55em;
+    filter: blur(20px);
+    transform: scale(1.04) translateY(-12px);
+  }
+}
+
+/* 2. Smooth fadeout for pure white mask */
+.intro-mask-anim {
+  animation: maskFadeOut 1.5s 3.6s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+}
+
+@keyframes maskFadeOut {
+  0% { opacity: 1; visibility: visible; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+/* 3. Classical golden/dark ethereal gradient text material */
+.text-gradient-ethereal {
+  background: linear-gradient(135deg, #B38728 0%, #FBF5B7 25%, #DAA520 50%, #FBF5B7 75%, #AA771C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sacred-glow {
+  filter: drop-shadow(0px 10px 25px rgba(218, 165, 32, 0.22));
+}
+
+/* Cinematic scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Glassmorphism utility classes matching PDF's "backdrop-blur" feel */
+.cinematic-glass {
+  background: rgba(10, 10, 12, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px border-white/5;
+}
+
+.cinematic-vignette {
+  background: radial-gradient(circle, transparent 20%, rgba(0, 0, 0, 0.8) 100%);
+}
